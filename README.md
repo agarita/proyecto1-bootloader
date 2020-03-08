@@ -32,6 +32,7 @@ En el caso de este ejemplo se van a tener 3 GDT, un segmento nulo, un segmento d
   * **Granularidad**: 1 bit que si está desactivado marca que el límite está en bloques de 1 byte, si está prendido, el límite es en múltiplos de bloques de 4 KB.
   * **Tamaño**: 1 bit que define el modo del segmento, cuando está apagado está en modo de 16 bits y cuando está prendido está en modo de 32 bits protegido.
   * **L**: 1 bit que indica el descriptor de código de **x86-64**. Está reservado para los segmentos de datos.
+
 La estructura del GDT está organizada de la siguiente manera:
 ![Diseño de un GDT](/Ayudas/GDT_Entry_Layout.png)
 
