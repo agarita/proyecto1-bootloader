@@ -2,7 +2,6 @@
 Proyecto 1 del curso de Principios de Sistemas Operativos
 
 ## Boot 1
-***
 Programa que imprime un Hola Mundo! en 16 bits.
 
 Solo puede correr programas de 512 bytes de memoria. Escribe directamente sobre el buffer de texto que haya actualmente en el BIOS. Lee carácter por carácter, hasta que no hayan más, y los va imprimiendo en pantalla por medio de la interrupción del  BIOS 0x10. Finalmente se rellena el resto de los 512 bytes con 0's, ya que los bootloader simples tienen definido como *booteables* los 512 bytes que vea.
@@ -10,7 +9,6 @@ Solo puede correr programas de 512 bytes de memoria. Escribe directamente sobre 
 Este ejemplo es tomado de: http://3zanders.co.uk/2017/10/13/writing-a-bootloader/
 
 ## Boot 2
-***
 Programa que imprime un Hola Mundo! en modo protegido de 32 bits.
 
 Para poder usar el modo protegido de 32 bits se deben cumplir dos condiciones:
@@ -45,7 +43,6 @@ En este ejemplo se realiza una pequeña variación al hola mundo de boot1, en es
 Este ejemplo es tomado de: http://3zanders.co.uk/2017/10/16/writing-a-bootloader2/
 
 ## Como correr el programa en QEMU
-***
 Para compilar el programa en NASM.
 ```
 nasm -f bin bootX.asm -o bootX.bin
