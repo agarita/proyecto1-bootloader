@@ -5,7 +5,7 @@ org 0x7c00    ; Le dice a NASM que empiece a trabajar en el offset 0x7c00
 ; Inicializamos nuestro ambiente de trabajo.
 ;≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
 boot:
-	mov ax, 0x2401 ; Activa el bit A20.
+	mov ax, 0x2401 ; Activa el bit A20. Que permite acceder toda la memoria.
 	int 0x15
 
   mov ax, 0x3    ; Setea el BIOS en modo de texto 3 en vga.
