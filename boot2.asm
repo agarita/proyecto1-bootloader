@@ -11,16 +11,16 @@ boot:
   mov ax, 0x3    ; Setea el BIOS en modo de texto 3 en vga.
 	int 0x10
 
-	cli            ; limpia la bandera de interrupciones
+	cli            ; Limpia la bandera de interrupciones.
 
 ;===============================================================================
 ; Se activan las instrucciones de 32 bits y el acceso a los registros completos.
 ;===============================================================================
 	lgdt [gdt_pointer]   ; Carga la tabla GlobalDescriptorTable.
 	mov eax, cr0
-	or eax,0x1           ; Activa el bit de modo protegido
+	or eax,0x1           ; Activa el bit de modo protegido.
 	mov cr0, eax
-	jmp CODE_SEG:boot2   ; Salto largo al código de segmento
+	jmp CODE_SEG:boot2   ; Salto largo al segmento de código.
 
 ;-------------------------------------------------------------------------------
 ; Definimos los GDT que vamos a usar.
@@ -90,17 +90,17 @@ boot2:
 	lodsb              ; Carga un byte en la dirección 'ds:si' a 'al'
 	or al,al           ; al = 0 ?
 	jz halt            ; Si no hay más caracteres, salga
-	or eax,0x0100      ; Setea el color de texto a azul
+	or eax,0x3100      ; Setea el color de texto a azul
 	mov word [ebx], ax ; Movemos los 2 bytes carácter para que quede pegado al eax
 	add ebx, 2         ; Se mueve 2 posiciones para caer sobre el próximo carácter
 	jmp .loop          ; Siguiente carácter
 
 halt:
-	cli                ; limpia la bandera de interrupciones
-	hlt						   	 ; detiene la ejecución
+	cli                ; Limpia la bandera de interrupciones
+	hlt						   	 ; Detiene la ejecución
 
 hello: db "Hello world!",0
 
-times 510 - ($-$$) db 0 ; rellena los siguientes 510 bytes con 0
+times 510 - ($-$$) db 0 ; Rellena los siguientes 510 bytes con 0
 dw 0xaa55               ; IMPORTANTE - Esto es lo que lo hace bootloader, marca
 												; 						 que estos 512 bytes son booteables.
