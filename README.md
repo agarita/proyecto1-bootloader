@@ -1,17 +1,14 @@
-# Proyecto1: Bootloader
-Proyecto 1 del curso de Principios de Sistemas Operativos
+# Proyecto 1: The Bootloader
+Proyecto 1 del curso de Principios de Sistemas Operativos. El objetivo del proyecto es desarrollar un bootloader que ejecute una versión del juego Lead (Atari 2600). Este proyecto está desarrollado con NASM y C.
 
-## Boot 1
-Programa que imprime un Hola Mundo! en 16 bits.
+## Funcionamiento
+El bootloader de este proyecto debe cumplir con ciertas características
 
-Solo puede correr programas de 512 bytes de memoria. Escribe directamente sobre el buffer de texto que haya actualmente en el BIOS. Lee carácter por carácter, hasta que no hayan más, y los va imprimiendo en pantalla por medio de la interrupción del  BIOS 0x10. Finalmente se rellena el resto de los 512 bytes con 0's, ya que los bootloader simples tienen definido como *booteables* los 512 bytes que vea.
+### Ser booteable
+Un archivo booteable debe ser de 512 bytes de memoria exactos, lo cuál se logra rellenando con ceros el espacio libre. Para indicarle al BIOS que los 512 bytes marcados son booteables se debe escribir el número hexadecimal aa55 directamente en el ejecutable por medio de `dw 0xaa55`.
 
-Este ejemplo es tomado de: http://3zanders.co.uk/2017/10/13/writing-a-bootloader/
-
-## Boot 2
-Programa que imprime un Hola Mundo! en modo protegido de 32 bits.
-
-Para poder usar el modo protegido de 32 bits se deben cumplir dos condiciones:
+### Modo protegido de 32 bits
+Si no se le dice al BIOS, solo se pueden usar los registros y las instrucciones de 16 bits. Para poder usar el modo protegido de 32 bits se deben cumplir dos condiciones:
 1. Activar las instrucciones de 32 bits.
 2. Dar acceso a los registros completos de 32 bits.
 
@@ -36,23 +33,35 @@ En el caso de este ejemplo se van a tener 3 GDT, un segmento nulo, un segmento d
 La estructura del GDT está organizada de la siguiente manera:
 ![Diseño de un GDT](/Ayudas/GDT_Entry_Layout.png)
 
-En este ejemplo se realiza una pequeña variación al hola mundo de boot1, en este caso se cambia el color del texto en el modo de texto de VGA. Para esto es importante conocer la estructura del [buffer de texto de VGA](https://en.wikipedia.org/wiki/VGA-compatible_text_mode). Estos tienen la siguiente estructura:
+### Acceder a más memoria
+El BIOS solo carga los primeros 512 bytes del sector de boot. Si se desea escribir programas de más tamaño se debe cargar más espacio en memoria. Para hacer esto se debe usar la instrucción `mov ah, 0x2` que se encargan de leer los sectores de un disco; en conjunto con la interrupción del BIOS `int 0x13` que provee los servicios de disco.
+
+Hecho esto, ya se puede cargar más memoria del segundo sector de memoria, desde está parte se puede realizar un programa fuera de los 512 bytes booteables.
+
+## Diseño de juego
+Como se ha mencionado antes se realizará una versión del juego Lead para la Atari 2600, para lo cuál se tendrán ciertas consideraciones para el diseño del mismo.
+
+### Tamaño de la pantalla
+La pantalla que será usada para representar el juego, se usará el estándar de gráficos VGA en modo de texto 3, está tiene las siguientes especificaciones:
+* Resolución: 720X400 píxeles.
+* Caracteres: 80X25 caracteres.
+* Resolución de Carácter: 9X16 píxeles.
+
+Ahora es importante conocer la resolución del juego original para poder realizar una conversión fiel al mismo. Se sabe que el hardware original de la [Atari 2600](https://en.wikipedia.org/wiki/Atari_2600_hardware) tenía las siguientes especificaciones:
+* Resolución: 40X192 píxeles.
+* Resolución sprite: 8X192 píxeles.
+* Resolución balas: 1x192 píxeles.
+
+**Notése** que estos valores están en la forma **ancho** X **alto**, y en la parte lógica del programa será tratado como **columnas** X **filas**
+
+### Colores y caracteres
+Para crear una experiencia, en este caso se cambia el color del texto en el modo de texto de VGA. Para esto es importante conocer la estructura del [buffer de texto de VGA](https://en.wikipedia.org/wiki/VGA-compatible_text_mode). Estos tienen la siguiente estructura:
 * **Color de fondo**: 4 bits que determinan el color del fondo del carácter. Son 16 colores posibles.
 * **Color de texto**: 4 bits que determinan el color del carácter. Son 16 colores posibles.
 * **Código del carácter**: 8 bits del código ASCII del carácter.
 
-Este ejemplo es tomado de: http://3zanders.co.uk/2017/10/16/writing-a-bootloader2/
 
-## Boot 3
-Programa que imprime un Hola Mundo! en modo protegido de 32 bits, desde afuera de los 512 bytes booteables.
-
-El BIOS solo carga los primeros 512 bytes del sector de boot. Si se desea escribir programas de más tamaño se debe cargar más espacio en memoria. Para hacer esto se debe usar la instrucción `mov ah, 0x2` que se encargan de leer los sectores de un disco; en conjunto con la interrupción del BIOS `int 0x13` que provee los servicios de disco.
-
-Hecho esto, ya se puede cargar más memoria del segundo sector de memoria, desde está parte se realizará un programa fuera de los 512 bytes booteables.
-
-Este ejemplo es tomado de: http://3zanders.co.uk/2017/10/18/writing-a-bootloader3/
-
-## Como correr el programa en QEMU
+### Como correr el programa en QEMU para boot 1, 2 y 3
 Para compilar el programa en NASM.
 ```
 nasm -f bin bootX.asm -o bootX.bin
@@ -62,3 +71,9 @@ Para ejecutar el programa en arquitectura x86 en QEMU.
 ```
 qemu-system-x86_64 -fda bootX.bin
 ```
+
+Para construir el bootloader use:
+  nasm: `nasm -f elf32 boot.asm -o boot.o`
+  gcc: `gcc -Wall -fno-PIC -fomit-frame-pointer -ffreestanding -m16 -Os -c kmain.c -o kernel.o`
+  linker: `ld -melf_i386 -T linker.ld kmain.o boot.bin -o kernel.elf -fno-exceptions -nostdlib -fno-rtti -shared`
+  kernel: `objcopy -O binary kernel.elf kernel.bin`

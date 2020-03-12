@@ -1,5 +1,5 @@
+OUTPUT_FORMAT("elf32-i386");
 ENTRY(boot)
-OUTPUT_FORMAT("binary")
 SECTIONS {
 	. = 0x7c00;
 	.text :
@@ -7,7 +7,7 @@ SECTIONS {
         *(.boot)
 		*(.text)
 	}
-    
+
     .rodata :
     {
     	*(.rodata)
@@ -23,4 +23,3 @@ SECTIONS {
     	*(.bss)
     }
 }
-
