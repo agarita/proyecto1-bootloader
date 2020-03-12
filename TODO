@@ -1,0 +1,37 @@
+caracter = bloque
+
+VGA modo 3
+- Tamaño pantalla (carácteres): 80 ancho x 25 alto
+- Tamaño por caracter: 9x16
+- Resolución pantalla: 720x400
+
+Atari
+- Resolución Atari: 160x192
+- Tamaño en pantalla(bloques): 10x13
+
+AVGA - Atari en VGA modo 3
+- Duplicamos la cantidad de bloques de Atari
+- Bloques AVGA:
+
+
+- Investigar como represento los mapas Atari.
+- Sprites se agregan por aparte.
+
+Variables:
+- Lista de puntuación.
+- Matriz lógica.
+- pausa.
+
+Funciones:
+main {
+  while(pausa){
+    //Do something
+  }
+}
+
+- Hilo pausa(?).
+- Funcion crear_sprite(tipo).
+- Función de movimiento(x, y, dirección);
+- Función de ponerEnCasilla(x, y, caracter, bg=0, fg=0);
+- Función de clear(); Llena de espacios.
+- Funciones para dibujar cada pantalla.
