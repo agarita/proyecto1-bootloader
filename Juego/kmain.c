@@ -192,6 +192,42 @@ void draw_about(void) {
     puts(TITLE_X + 15, TITLE_Y + 2, BLACK,   BRIGHT | YELLOW, " ");
 }
 
+/*Hace que la pantalla parpadee de un color por 2 segundos */
+void strobe(void){
+    /* Agregar funcion de garita para manejar el tiempo */
+    for (int i=0;1;i++)
+        {
+        /* Changes screen color */
+        clear(BRIGHT|GRAY);
+        }
+}
+
+
+
+/* Draws intro Screnn */
+void draw_intro(void) {
+    puts(35,5,BLACK,BLUE,"Lead");
+    puts(35,10,BLACK,BLUE,"Start");
+    puts(35,11,BLACK,BLUE,"Options");
+    puts(35,15,BLACK,BLUE,"©2008");
+    puts(35,16,BLACK,BLUE,"Simone");
+    puts(35,17,BLACK,BLUE,"Serra");
+    puts(35,20,BLACK,BLUE,"Ship");
+    puts(35,21,BLACK,BLUE,"0000");
+}
+
+
+/* Draws "will you lead" secuence in the screen */
+void intro_secuence(void){
+    /*Funcion de timer*/
+    puts(35,10,BLACK,BLUE,"Will");
+    /*Funcion de timer*/
+    puts(35,10,BLACK,BLUE,"You");
+    /*Funcion de timer*/
+    puts(35,10,BLACK,BLUE,"Lead?");
+
+}
+
 void kmain()
 {
   clear(BLACK);
