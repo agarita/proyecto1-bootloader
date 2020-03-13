@@ -26,9 +26,8 @@ static inline double pow(double a, double b)
         result *= a;
     return result;
 }
-tetris
-/* Port I/O */
 
+/* Port I/O */
 static inline u8 inb(u16 p)
 {
     u8 r;

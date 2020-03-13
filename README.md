@@ -76,3 +76,11 @@ Para construir el bootloader use:
   nasm: `nasm -f elf32 boot.asm -o boot.o`
   gcc: `gcc -Wall -fno-PIE -fomit-frame-pointer -ffreestanding -m32 -Os -c kmain.c -o kernel.o`
   linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.elf -fno-exceptions -nostdlib -fno-rtti -shared`
+
+## Referencias
+instrucción A20: https://wiki.osdev.org/A20_Line
+Global Descriptor Table: https://en.wikipedia.org/wiki/Global_Descriptor_Table
+VGA: https://en.wikipedia.org/wiki/VGA-compatible_text_mode
+Atari Hardware: https://en.wikipedia.org/wiki/Atari_2600_hardware
+RDTSC: https://c9x.me/x86/html/file_module_x86_id_278.html
+I/O: https://wiki.osdev.org/Inline_Assembly/Examples
