@@ -33,7 +33,6 @@ enum timer {
 };
 
 /* Entradas de teclado */
-
 #define KEY_D     (0x20)
 #define KEY_H     (0x23)
 #define KEY_P     (0x19)
@@ -57,7 +56,7 @@ u64 timers[TIMER__LENGTH] = {0};
 u64 tpms;     // Ticks por milisegundo
 
 /*==============================================================================
-                              FUNCIONES DE ESCRITURA
+                      FUNCIONES DE ESCRITURA Y LECTURA
 ==============================================================================*/
 /* Escribe un carácter*/
 void putc(u8 x, u8 y, enum color fg, enum color bg, char c){
@@ -69,6 +68,11 @@ void putc(u8 x, u8 y, enum color fg, enum color bg, char c){
 void puts(u8 x, u8 y, enum color fg, enum color bg, const char *s){
     for (; *s; s++, x++)
         putc(x, y, fg, bg, *s);
+}
+
+/* Retorna el carácter en la posición xXy*/
+char getc(u8 x, u8 y){
+  return vga[y * COLS + x];
 }
 
 /* Pinta la pantalla de un color*/
@@ -83,16 +87,14 @@ void clear(enum color bg){
                               FUNCIONES DE ENTRADA/SALIDA
 ==============================================================================*/
 /* Recibe un valor de 8 bits de un puerto de I/O*/
-static inline u8 inb(u16 p)
-{
+static inline u8 inb(u16 p){
     u8 r;
     asm("inb %1, %0" : "=a" (r) : "dN" (p));
     return r;
 }
 
 /* Envía un valor de 8 bits a un puerto de I/O*/
-static inline void outb(u16 p, u8 d)
-{
+static inline void outb(u16 p, u8 d){
     asm("outb %1, %0" : : "dN" (p), "a" (d));
 }
 
@@ -234,8 +236,7 @@ void intro_secuence(void){
 
 }
 
-void kmain()
-{
+void kmain(){
   clear(BLACK);
   draw_about();
 
@@ -267,20 +268,70 @@ start:
         break;
       case KEY_ENTER:
         clear(BLACK);
-        if (option == 'G') goto game;
-        else goto leaderboard;
+        if (option == 'G'){
+          option = '1';
+          goto game;
+        }
+        else{
+          option = 'V';
+          goto leaderboard;
+        }
         break;
     }
   }
   goto start;
 
 game:
-  puts(35,10,BLACK,BLUE,"GAME");
+  tps();
+  draw_world(option);
+
+  putc(0,0,BLACK, YELLOW, getc(35,10));
+  if((key = scan())) {
+    last_key = key;
+    switch(key) {
+      case KEY_UP:
+        if(option == '1')      option = 'V';
+        else if(option == '2') option = '1';
+        else if(option == '3') option = '2';
+        else option = '3';
+        break;
+      case KEY_DOWN:
+        if(option == '1')      option = '2';
+        else if(option == '2') option = '3';
+        else if(option == '3') option = 'V';
+        else option = '1';
+        break;
+      case KEY_ENTER:
+        clear(BLACK);
+        if (option == '1'){
+          goto loop;
+        }
+        else if(option == '2'){
+          goto loop;
+        }
+        else if(option == '3'){
+          goto loop;
+        }
+        else goto start;
+        break;
+    }
+  }
 
   goto game;
 
 leaderboard:
-  puts(35,10,BLACK,BLUE,"LEADERBOARD");
+  tps();
+  draw_leaderboard(option);
+
+  if((key = scan())) {
+    last_key = key;
+    switch(key) {
+      case KEY_ENTER:
+        clear(BLACK);
+        goto start;
+        break;
+    }
+  }
 
   goto leaderboard;
 
