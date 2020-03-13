@@ -733,7 +733,7 @@ noreturn main()
     clear(BLACK);
     draw();
 
-    bool debug = false, help = true, statistics = false;
+    bool debug = true, help = true, statistics = false;
     u8 last_key;
 loop:
     tps();

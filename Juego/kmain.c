@@ -32,8 +32,23 @@ enum timer {
   TIMER__LENGTH
 };
 
+/* Entradas de teclado */
+
+#define KEY_D     (0x20)
+#define KEY_H     (0x23)
+#define KEY_P     (0x19)
+#define KEY_R     (0x13)
+#define KEY_S     (0x1F)
+#define KEY_UP    (0x48)
+#define KEY_DOWN  (0x50)
+#define KEY_LEFT  (0x4B)
+#define KEY_RIGHT (0x4D)
+#define KEY_ENTER (0x1C)
+#define KEY_SPACE (0x39)
+
 #define TITLE_X (COLS / 2 - 9)
 #define TITLE_Y (ROWS / 2 - 1)
+
 #define COLS (80)
 #define ROWS (25)
 
@@ -149,6 +164,10 @@ bool wait(enum timer timer, u32 ms){
 }
 
 /*==============================================================================
+                              ESCANEO DE TECLAS
+==============================================================================*/
+
+/*==============================================================================
                               FUNCIONES DE PINTADO
 ==============================================================================*/
 /* Draw about information in the centre. Shown on boot and pause. */
@@ -183,9 +202,20 @@ void kmain()
   tps();
   itpms = tpms; while(tpms == itpms) tps();
   itpms = tpms; while(tpms == itpms) tps();
-  clear(BLUE);
 
-  wait(TIMER_UPDATE, 10000);
-  clear(RED);
-  putc()
+  bool rojo = true;
+loop:
+  // INICIO
+  tps();    //Mantiene los timers calibrados.
+
+  bool updated = false;
+
+  // SI PRESIONO TECLA
+  u8 key;
+  if((key = scan())) {
+
+  }
+  // SI EL JUEGO ESTÁ PAUSADO, NO HA PERDIDO Y SE CUMPLE EL INTERVALO
+
+  goto loop;
 }

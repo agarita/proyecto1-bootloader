@@ -82,5 +82,6 @@ instrucción A20: https://wiki.osdev.org/A20_Line
 Global Descriptor Table: https://en.wikipedia.org/wiki/Global_Descriptor_Table
 VGA: https://en.wikipedia.org/wiki/VGA-compatible_text_mode
 Atari Hardware: https://en.wikipedia.org/wiki/Atari_2600_hardware
-RDTSC: https://c9x.me/x86/html/file_module_x86_id_278.html
+ReaD Time-Stamp Counter: https://c9x.me/x86/html/file_module_x86_id_278.html
 I/O: https://wiki.osdev.org/Inline_Assembly/Examples
+Real-Time-Clock: https://en.wikipedia.org/wiki/Real-time_clock
