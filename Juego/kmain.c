@@ -22,7 +22,7 @@ enum color {
     MAGENTA,
     YELLOW,
     GRAY,
-    BRIGHT
+    BRIGHT 
 };
 
 /* IDs para mantener separadas distintas operaciones de Tiempo*/
@@ -187,4 +187,5 @@ void kmain()
 
   wait(TIMER_UPDATE, 10000);
   clear(RED);
+  putc()
 }
