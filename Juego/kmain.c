@@ -22,7 +22,7 @@ enum color {
     MAGENTA,
     YELLOW,
     GRAY,
-    BRIGHT 
+    BRIGHT
 };
 
 /* IDs para mantener separadas distintas operaciones de Tiempo*/
@@ -38,7 +38,6 @@ enum timer {
 #define KEY_H     (0x23)
 #define KEY_P     (0x19)
 #define KEY_R     (0x13)
-#define KEY_S     (0x1F)
 #define KEY_UP    (0x48)
 #define KEY_DOWN  (0x50)
 #define KEY_LEFT  (0x4B)
@@ -166,6 +165,14 @@ bool wait(enum timer timer, u32 ms){
 /*==============================================================================
                               ESCANEO DE TECLAS
 ==============================================================================*/
+u8 scan(void){
+  static u8 key = 0;
+  u8 scan = inb(0x60);
+  if(scan != key)
+    return key = scan;
+  else
+    return 0;
+}
 
 /*==============================================================================
                               FUNCIONES DE PINTADO
@@ -203,17 +210,16 @@ void strobe(void){
 }
 
 
-
 /* Draws intro Screnn */
-void draw_intro(void) {
-    puts(35,5,BLACK,BLUE,"Lead");
-    puts(35,10,BLACK,BLUE,"Start");
-    puts(35,11,BLACK,BLUE,"Options");
-    puts(35,15,BLACK,BLUE,"©2008");
-    puts(35,16,BLACK,BLUE,"Simone");
-    puts(35,17,BLACK,BLUE,"Serra");
-    puts(35,20,BLACK,BLUE,"Ship");
-    puts(35,21,BLACK,BLUE,"0000");
+void draw_intro(char option) {
+    puts(39,5,BLUE,BLACK, "Lead");
+    option == 'G' ? puts(38,10,BLACK,CYAN,"Start") : puts(38,10,BLUE,BLACK,"Start");
+    option == 'L' ? puts(35,11,BLACK,CYAN,"Leaderboard") : puts(35,11,BLUE,BLACK,"Leaderboard");
+    puts(39,15,BLUE,BLACK,"2008");
+    puts(38,16,BLUE,BLACK,"Simone");
+    puts(38,17,BLUE,BLACK,"Serra");
+    puts(39,20,BLUE,BLACK,"Ship");
+    puts(39,21,BLUE,BLACK,"0000");
 }
 
 
@@ -239,17 +245,76 @@ void kmain()
   itpms = tpms; while(tpms == itpms) tps();
   itpms = tpms; while(tpms == itpms) tps();
 
-  bool rojo = true;
+  u8 key;
+  u8 last_key;
+
+  char option = 'G';
+  bool updated = false;
+
+  clear(BLACK);
+start:
+  tps();
+  draw_intro(option);
+
+  if((key = scan())) {
+    last_key = key;
+    switch(key) {
+      case KEY_UP:
+        option = (option == 'L') ? 'G' : 'L';
+        break;
+      case KEY_DOWN:
+        option = (option == 'L') ? 'G' : 'L';
+        break;
+      case KEY_ENTER:
+        clear(BLACK);
+        if (option == 'G') goto game;
+        else goto leaderboard;
+        break;
+    }
+  }
+  goto start;
+
+game:
+  puts(35,10,BLACK,BLUE,"GAME");
+
+  goto game;
+
+leaderboard:
+  puts(35,10,BLACK,BLUE,"LEADERBOARD");
+
+  goto leaderboard;
+
 loop:
   // INICIO
   tps();    //Mantiene los timers calibrados.
 
-  bool updated = false;
-
   // SI PRESIONO TECLA
-  u8 key;
   if((key = scan())) {
-
+    last_key = key;
+    switch(key) {
+      case KEY_UP:
+        putc(0,0,YELLOW, BLACK, 'v');
+        break;
+      case KEY_DOWN:
+        putc(0,0,YELLOW, BLACK, '^');
+        break;
+      case KEY_SPACE:     // Disparar
+        putc(0,0,YELLOW, BLACK, '_');
+        break;
+      case KEY_ENTER:     // Siguiente
+        putc(0,0,YELLOW, BLACK, '*');
+        break;
+      case KEY_LEFT:     // Izquierda
+        putc(0,0,YELLOW, BLACK, '<');
+        break;
+      case KEY_RIGHT:     // Derecha
+        putc(0,0,YELLOW, BLACK, '>');
+        break;
+      case KEY_P:         // Pausa
+        putc(0,0,YELLOW, BLACK, 'P');
+        break;
+    }
+    updated = true;
   }
   // SI EL JUEGO ESTÁ PAUSADO, NO HA PERDIDO Y SE CUMPLE EL INTERVALO
 
