@@ -74,6 +74,5 @@ qemu-system-x86_64 -fda bootX.bin
 
 Para construir el bootloader use:
   nasm: `nasm -f elf32 boot.asm -o boot.o`
-  gcc: `gcc -Wall -fno-PIC -fomit-frame-pointer -ffreestanding -m16 -Os -c kmain.c -o kernel.o`
-  linker: `ld -melf_i386 -T linker.ld kmain.o boot.bin -o kernel.elf -fno-exceptions -nostdlib -fno-rtti -shared`
-  kernel: `objcopy -O binary kernel.elf kernel.bin`
+  gcc: `gcc -Wall -fno-PIE -fomit-frame-pointer -ffreestanding -m32 -Os -c kmain.c -o kernel.o`
+  linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.elf -fno-exceptions -nostdlib -fno-rtti -shared`
