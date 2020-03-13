@@ -240,6 +240,21 @@ void draw_leaderboard(char option) {
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Back") : puts(41,20,BRIGHT|YELLOW,BLACK,"Back");
 }
 
+/* Draws intro Screnn */
+void draw_win(char option) {
+    puts(38,9,BLUE,BLACK, "Congratulations");
+    puts(38,10,BLUE,BLACK,"You Won!!!");
+    option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
+}
+
+/* Draws intro Screnn */
+void draw_game_over(char option) {
+    puts(38,9,RED,BLACK, "Game Over");
+    puts(38,10,RED,BLACK,"You Lost");
+    puts(38,11,RED,BLACK,":( :( :( ");
+    option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
+}
+
 
 /* Draws "will you lead" secuence in the screen */
 void intro_secuence(void){
