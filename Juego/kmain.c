@@ -76,6 +76,7 @@ char getc(u8 x, u8 y){
   return vga[y * COLS + x];
 }
 
+
 /* Pinta la pantalla de un color*/
 void clear(enum color bg){
     u8 x, y;
@@ -247,10 +248,62 @@ void draw_game_over(char option) {
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
 }
 
+void move_char(int row,int column,int row_direction,int column_direction) {
+  char c;
+  u16 actual_char, replacemente_char;
+  actual_char = vga[row*COLS + column];
+  replacemente_char = vga[(row+row_direction)*COLS + (column+column_direction)];
+  enum color fg,bg;
+
+  bg = (actual_char & 0xF000) >> 12;
+  fg = (actual_char & 0x0F00) >> 8;
+  c = getc(column,row);
+
+  putc(column,row,fg,bg,c);
+
+  bg = (replacemente_char & 0xF000) >> 12;
+  fg = (replacemente_char & 0x0F00) >> 8;
+  c = getc(column+column_direction,row+row_direction);
+
+  putc(column+column_direction,row+row_direction,fg,bg,c);
+
+}
+
+int verify_colition(int row, int column, int row_direction, int column_direction) {
+  if(!valid_vga_position(row_direction,column_direction)) {
+    return 1;
+  }
+  char c = getc(row_direction,column_direction);
+  if (c != ' ') {
+    return 1;
+  }
+  return 0;
+}
+
+int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
+  return (row >= 0 && row < 24 && column >= 0 && column < 80);
+}
+
+void create_walls(int row, int column,int len,enum color fg,enum color bg,char c) {
+  int i,rows_max;
+  rows_max = 23;
+  for (i=row;i<rows_max;i++) {
+    putc(column,i,fg,bg,c);
+    putc(column+len,i,fg,bg,c);
+    move_char(i,column,1,0);
+    move_char(i,column+len,1,0);
+  }
+}
+
 void kmain(){
   clear(BLACK);
-  draw_about();
+  create_walls(0,25,30,RED,BLACK,'|');
+  create_walls(0,27,30,YELLOW,BLACK,'|');
+  create_walls(0,29,30,CYAN,BLACK,'|');
+  //draw_about();
 
+
+/*
   // Espera un segundo para calibrar el tiempo.
   u32 itpms;
   tps();
@@ -423,5 +476,5 @@ loop:
   }
   // SI EL JUEGO ESTÁ PAUSADO, NO HA PERDIDO Y SE CUMPLE EL INTERVALO
 
-  goto loop;
+  goto loop;*/
 }
