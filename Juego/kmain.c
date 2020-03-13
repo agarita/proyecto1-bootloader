@@ -217,11 +217,29 @@ void draw_intro(char option) {
     puts(39,5,BLUE,BLACK, "Lead");
     option == 'G' ? puts(38,10,BLACK,CYAN,"Start") : puts(38,10,BLUE,BLACK,"Start");
     option == 'L' ? puts(35,11,BLACK,CYAN,"Leaderboard") : puts(35,11,BLUE,BLACK,"Leaderboard");
-    puts(39,15,BLUE,BLACK,"2008");
-    puts(38,16,BLUE,BLACK,"Simone");
-    puts(38,17,BLUE,BLACK,"Serra");
-    puts(39,20,BLUE,BLACK,"Ship");
-    puts(39,21,BLUE,BLACK,"0000");
+    puts(39,15,BLUE,BLACK,"2020");
+    puts(38,16,BLUE,BLACK,"Alejandro");
+    puts(38,17,BLUE,BLACK,"Aymaru");
+    puts(39,28,BLUE,BLACK,"Alberto");
+}
+
+/* Draws intro Screnn */
+void draw_world(char option) {
+    puts(35,5,YELLOW,BLACK, "Select the level");
+    option == '1' ? puts(40,10,BLACK,YELLOW,"Level 1") : puts(40,10,BRIGHT|YELLOW,BLACK,"Level 1");
+    option == '2' ? puts(40,11,BLACK,YELLOW,"Level 2") : puts(40,11,BRIGHT|YELLOW,BLACK,"Level 2");
+    option == '3' ? puts(40,12,BLACK,YELLOW,"Level 3") : puts(40,12,BRIGHT|YELLOW,BLACK,"Level 3");
+    option == 'V' ? puts(41,13,BLACK,YELLOW,"Back") : puts(41,13,BRIGHT|YELLOW,BLACK,"Back");
+}
+
+/* Draws intro Screnn */
+void draw_leaderboard(char option) {
+    puts(38,5,BLUE,BLACK, "Leaderboard");
+    puts(38,8,BLUE,BLACK,"AOZ   10000000");
+    puts(38,9,BLUE,BLACK,"AGC    5858588");
+    puts(38,10,BLUE,BLACK,"ACF      40000");
+    puts(38,11,BLUE,BLACK,"FSC          3");
+    option == 'V' ? puts(41,20,BLACK,YELLOW,"Back") : puts(41,20,BRIGHT|YELLOW,BLACK,"Back");
 }
 
 
