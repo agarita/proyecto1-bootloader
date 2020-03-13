@@ -75,15 +75,18 @@ qemu-system-x86_64 -fda bootX.bin
 Para construir el bootloader use:
   nasm: `nasm -f elf32 boot.asm -o boot.o`
   gcc: `gcc -Wall -fno-PIE -fomit-frame-pointer -ffreestanding -m32 -Os -c kmain.c -o kernel.o`
-  linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.elf -fno-exceptions -nostdlib -fno-rtti -shared`
+  linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.bin -fno-exceptions -nostdlib -fno-rtti -shared`
 
 ## Referencias
+Referencia de caracteres posibles/Code page 737: https://en.wikipedia.org/wiki/Code_page_737
 LEAD: https://atariage.com/store/index.php?l=product_detail&p=932
 Instrucción A20: https://wiki.osdev.org/A20_Line
 Global Descriptor Table: https://en.wikipedia.org/wiki/Global_Descriptor_Table
 VGA: https://en.wikipedia.org/wiki/VGA-compatible_text_mode
 Atari Hardware: https://en.wikipedia.org/wiki/Atari_2600_hardware
-ReaD Time-Stamp Counter: https://c9x.me/x86/html/file_module_x86_id_278.html
+ReaD Time-Stamp Counter:
+https://github.com/cirosantilli/x86-bare-metal-examples/blob/master/rtc.S
+https://c9x.me/x86/html/file_module_x86_id_278.html
 I/O: https://wiki.osdev.org/Inline_Assembly/Examples
 Real-Time-Clock: https://en.wikipedia.org/wiki/Real-time_clock
 Key Input: http://stanislavs.org/helppc/scan_codes.html

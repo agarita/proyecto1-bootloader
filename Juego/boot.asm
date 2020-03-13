@@ -11,7 +11,7 @@ boot:
 	mov [disk],dl
 
 	mov ah, 0x2    ;read sectors
-	mov al, 6      ;sectors to read
+	mov al, 12     ;sectors to read
 	mov ch, 0      ;cylinder idx
 	mov dh, 0      ;head idx
 	mov cl, 2      ;sector idx

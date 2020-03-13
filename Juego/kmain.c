@@ -29,6 +29,7 @@ enum color {
 enum timer {
   TIMER_UPDATE,
   TIMER_CLEAR,
+  TIMER_ANIMACIONES,
   TIMER__LENGTH
 };
 
@@ -201,17 +202,6 @@ void draw_about(void) {
     puts(TITLE_X + 15, TITLE_Y + 2, BLACK,   BRIGHT | YELLOW, " ");
 }
 
-/*Hace que la pantalla parpadee de un color por 2 segundos */
-void strobe(void){
-    /* Agregar funcion de garita para manejar el tiempo */
-    for (int i=0;1;i++)
-        {
-        /* Changes screen color */
-        clear(BRIGHT|GRAY);
-        }
-}
-
-
 /* Draws intro Screnn */
 void draw_intro(char option) {
     puts(39,5,BLUE,BLACK, "Lead");
@@ -219,8 +209,8 @@ void draw_intro(char option) {
     option == 'L' ? puts(35,11,BLACK,CYAN,"Leaderboard") : puts(35,11,BLUE,BLACK,"Leaderboard");
     puts(39,15,BLUE,BLACK,"2020");
     puts(38,16,BLUE,BLACK,"Alejandro");
-    puts(38,17,BLUE,BLACK,"Aymaru");
-    puts(39,28,BLUE,BLACK,"Alberto");
+    puts(38,17,BLUE,BLACK,"Alberto");
+    puts(39,18,BLUE,BLACK,"Aymaru");
 }
 
 /* Draws intro Screnn */
@@ -255,18 +245,6 @@ void draw_game_over(char option) {
     puts(38,10,RED,BLACK,"You Lost");
     puts(38,11,RED,BLACK,":( :( :( ");
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
-}
-
-
-/* Draws "will you lead" secuence in the screen */
-void intro_secuence(void){
-    /*Funcion de timer*/
-    puts(35,10,BLACK,BLUE,"Will");
-    /*Funcion de timer*/
-    puts(35,10,BLACK,BLUE,"You");
-    /*Funcion de timer*/
-    puts(35,10,BLACK,BLUE,"Lead?");
-
 }
 
 void kmain(){
@@ -318,7 +296,7 @@ game:
   tps();
   draw_world(option);
 
-  putc(0,0,BLACK, YELLOW, getc(35,10));
+  //putc(0,0,BLACK, YELLOW, getc(35,10));
   if((key = scan())) {
     last_key = key;
     switch(key) {
@@ -372,30 +350,73 @@ loop:
   // INICIO
   tps();    //Mantiene los timers calibrados.
 
+  u32 ultimaPiezaX, ultimaPiezaY;
+  if(TIMER_ANIMACIONES != 0 && wait(TIMER_ANIMACIONES, 500)){
+    if(ultimaPiezaX == 70 && ultimaPiezaY == 0) putc(70,0,YELLOW, BLACK, ' ');
+    else if(ultimaPiezaX == 70 && ultimaPiezaY == 1) putc(70,1,YELLOW, BLACK, ' ');
+    else if(ultimaPiezaX == 67 && ultimaPiezaY == 0) putc(67,0,YELLOW, BLACK, ' ');
+    else if(ultimaPiezaX == 64 && ultimaPiezaY == 1) putc(64,1,YELLOW, BLACK, ' ');
+    else if(ultimaPiezaX == 69 && ultimaPiezaY == 0) putc(69,0,YELLOW, BLACK, ' ');
+    else{
+      puts(72,0,YELLOW, BLACK, '  ');
+      puts(72,1,YELLOW, BLACK, '  ');
+    }
+  }
+
+  if(option == '1'){
+    putc(1,0,GREEN, YELLOW, '1');
+  }
+  else if(option == '2'){
+    putc(1,0,GREEN, YELLOW, '2');
+  }
+  else if(option == '3'){
+    putc(1,0,GREEN, YELLOW, '3');
+  }
   // SI PRESIONO TECLA
   if((key = scan())) {
     last_key = key;
     switch(key) {
-      case KEY_UP:
-        putc(0,0,YELLOW, BLACK, 'v');
+      case KEY_UP:        // Arriba
+        putc(70,0,YELLOW, BLACK, '|');
+        ultimaPiezaX = 70;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(70,0,YELLOW, BLACK, ' ');
         break;
-      case KEY_DOWN:
-        putc(0,0,YELLOW, BLACK, '^');
+      case KEY_DOWN:      // Abajo
+        putc(70,1,YELLOW, BLACK, '|');
+        ultimaPiezaX = 70;
+        ultimaPiezaY = 1;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(70,1,YELLOW, BLACK, ' ');
         break;
       case KEY_SPACE:     // Disparar
-        putc(0,0,YELLOW, BLACK, '_');
+        putc(67,0,YELLOW, BLACK, '-');
+        ultimaPiezaX = 67;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(67,0,YELLOW, BLACK, ' ');
         break;
       case KEY_ENTER:     // Siguiente
-        putc(0,0,YELLOW, BLACK, '*');
+        putc(64,1,YELLOW, BLACK, 'o');
+        ultimaPiezaX = 64;
+        ultimaPiezaY = 1;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(64,1,YELLOW, BLACK, ' ');
         break;
       case KEY_LEFT:     // Izquierda
-        putc(0,0,YELLOW, BLACK, '<');
+        putc(69,0,YELLOW, BLACK, '_');
+        ultimaPiezaX = 69;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(69,0,YELLOW, BLACK, ' ');
         break;
       case KEY_RIGHT:     // Derecha
-        putc(0,0,YELLOW, BLACK, '>');
+        putc(71,0,YELLOW, BLACK, '_');
+        ultimaPiezaX = 71;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(71,0,YELLOW, BLACK, ' ');
         break;
       case KEY_P:         // Pausa
-        putc(0,0,YELLOW, BLACK, 'P');
+        puts(72,0,RED, BLACK, "|| PAUSE");
+        puts(72,1,RED, BLACK, "||");
+        ultimaPiezaX = 72;
+        ultimaPiezaY = 0;
         break;
     }
     updated = true;
