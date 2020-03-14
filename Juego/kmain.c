@@ -226,8 +226,9 @@ void draw_world(char option) {
 /* Draws intro Screnn */
 void draw_leaderboard(char option) {
     puts(38,5,BLUE,BLACK, "Leaderboard");
-    puts(38,8,BLUE,BLACK,"AOZ   10000000");
-    puts(38,9,BLUE,BLACK,"AGC    5858588");
+    puts(38,7,BLUE,BLACK, "Name     Score")
+    puts(38,8,BLUE,BLACK, "AOZ   10000000");
+    puts(38,9,BLUE,BLACK, "AGC    5858588");
     puts(38,10,BLUE,BLACK,"ACF      40000");
     puts(38,11,BLUE,BLACK,"FSC          3");
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Back") : puts(41,20,BRIGHT|YELLOW,BLACK,"Back");
@@ -246,6 +247,62 @@ void draw_game_over(char option) {
     puts(38,10,RED,BLACK,"You Lost");
     puts(38,11,RED,BLACK,":( :( :( ");
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
+}
+
+/*Move Ship
+ *  Cambiar void por input de teclado
+ * */
+void move_ship(void){
+	u8 key;
+    u8 last_key;
+	if((key = scan())) {
+    last_key = key;
+    switch(key) {
+      case KEY_UP:        // Arriba
+        putc(70,20,YELLOW, BLACK, '|');
+        ultimaPiezaX = 70;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(70,0,YELLOW, BLACK, ' ');
+        break;
+      case KEY_DOWN:      // Abajo
+        putc(70,1,YELLOW, BLACK, '|');
+        ultimaPiezaX = 70;
+        ultimaPiezaY = 1;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(70,1,YELLOW, BLACK, ' ');
+        break;
+      case KEY_SPACE:     // Disparar
+        putc(67,0,YELLOW, BLACK, '-');
+        ultimaPiezaX = 67;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(67,0,YELLOW, BLACK, ' ');
+        break;
+      case KEY_ENTER:     // Siguiente
+        putc(64,1,YELLOW, BLACK, 'o');
+        ultimaPiezaX = 64;
+        ultimaPiezaY = 1;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(64,1,YELLOW, BLACK, ' ');
+        break;
+      case KEY_LEFT:     // Izquierda
+        putc(69,0,YELLOW, BLACK, '_');
+        ultimaPiezaX = 69;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(69,0,YELLOW, BLACK, ' ');
+        break;
+      case KEY_RIGHT:     // Derecha
+        putc(71,0,YELLOW, BLACK, '_');
+        ultimaPiezaX = 71;
+        ultimaPiezaY = 0;
+        if(wait(TIMER_ANIMACIONES, 100)) putc(71,0,YELLOW, BLACK, ' ');
+        break;
+      case KEY_P:         // Pausa
+        puts(72,0,RED, BLACK, "|| PAUSE");
+        puts(72,1,RED, BLACK, "||");
+        ultimaPiezaX = 72;
+        ultimaPiezaY = 0;
+        break;
+    }
+    updated = true;
+  }
 }
 
 void move_char(int row,int column,int row_direction,int column_direction) {
