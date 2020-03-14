@@ -56,11 +56,12 @@ enum timer {
 u16* const vga = (u16*) 0xb8000;
 
 u32 score = 0, speed_e = ENEMY_1_SPEED, speed_b = 0;
-char option = 'G';
+char option;
 
 //DEBUG variables
 u32 disparos = 0, caidas = 0;
 
+bool debug;
 bool paused = false, game_over = false;
 
 u64 timers[TIMER__LENGTH] = {0};
@@ -359,6 +360,7 @@ void kmain(){
   itpms = tpms; while(tpms == itpms) tps();
 
   u8 key;
+  debug = true; option = 'G';
   bool updated = false;
 
   clear(BLACK);
@@ -413,7 +415,7 @@ game:
         clear(BLACK);
         if (option == '1' || option == '2' ||
             option == '3' || option == '4') goto loop;
-        else goto start;
+        else{option = 'G'; goto start;}
         break;
     }
   }
@@ -428,6 +430,7 @@ leaderboard:
     switch(key) {
       case KEY_ENTER:
         clear(BLACK);
+        option = 'G';
         goto start;
         break;
     }
@@ -439,6 +442,13 @@ loop:
   // INICIO
   tps();    //Mantiene los timers calibrados.
 
+  if(debug) {
+    puts(1,23, BLUE, BRIGHT | BLUE, "Gravedad: ");
+    puts(11,23, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+    puts(1,24, GREEN, BRIGHT | GREEN, "Disparos: ");
+    puts(11,24, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
+  }
+
   // ACTUALIZAR SCORE
 
   // SEÑAL DE NIVEL
@@ -447,16 +457,16 @@ loop:
     speed_e = ENEMY_1_SPEED;
     puts(1,0,RED, BRIGHT | RED, "-1-");
   }
-  else if(option == '2'){
+  if(option == '2'){
     speed_b = 0;
     speed_e = ENEMY_2_SPEED;
     puts(1,0,YELLOW, BRIGHT | YELLOW, "-2-");
   }
-  else if(option == '3'){
+  if(option == '3'){
     speed_b = BULLET_SPEED;
     speed_e = ENEMY_3_SPEED;
     puts(1,0,BLUE, BRIGHT | BLUE, "-3-");}
-  else if(option == '4'){
+  if(option == '4'){
     speed_b = 0;
     speed_e = ENEMY_4_SPEED;
     puts(1,0,MAGENTA, BRIGHT | MAGENTA, "-4-");}
@@ -476,14 +486,19 @@ loop:
         break;
       case KEY_RIGHT:     // Derecha
         break;
+      case KEY_D:
+        debug = !debug;
+        puts(1,23, BLACK, BLACK, "              ");
+        puts(1,24, BLACK, BLACK, "              ");
+        break;
       case KEY_P:         // Pausa
         paused = !paused;
         puts(70, 0, BLACK, BLACK, "      ");
         break;
       case KEY_S:         // Siguiente nivel
         caidas = disparos = 0;
-        puts(1,21, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
-        puts(1,20, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+        puts(11,23, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+        puts(11,24, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
         if(option == '1') option = '2';
         else if(option == '2') option = '3';
         else if(option == '3') option = '4';
@@ -496,14 +511,12 @@ loop:
   // ACTUALIZAR ENEMIGO
   if(!paused && !game_over && interval(TIMER_ENEMY, speed_e)){
     caidas++;
-    puts(1,20, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
   }
 
   // ACTUALIZAR BALAS
   if((option == '1' || option == '3') && !paused &&
       !game_over && interval(TIMER_BULLET, speed_b)){
     disparos++;
-    puts(1,21, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
   }
 
   // ACTUALIZAR EL JUEGO
