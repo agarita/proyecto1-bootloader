@@ -1,3 +1,4 @@
+#include "config.h"
 
 typedef unsigned char      u8;
 typedef signed   char      s8;
@@ -27,8 +28,8 @@ enum color {
 
 /* IDs para mantener separadas distintas operaciones de Tiempo*/
 enum timer {
-  TIMER_UPDATE,
-  TIMER_CLEAR,
+  TIMER_ENEMY,
+  TIMER_BULLET,
   TIMER_ANIMACIONES,
   TIMER__LENGTH
 };
@@ -38,6 +39,7 @@ enum timer {
 #define KEY_H     (0x23)
 #define KEY_P     (0x19)
 #define KEY_R     (0x13)
+#define KEY_S     (0x1F)
 #define KEY_UP    (0x48)
 #define KEY_DOWN  (0x50)
 #define KEY_LEFT  (0x4B)
@@ -52,6 +54,14 @@ enum timer {
 #define ROWS (25)
 
 u16* const vga = (u16*) 0xb8000;
+
+u32 score = 0, speed_e = ENEMY_1_SPEED, speed_b = 0;
+char option = 'G';
+
+//DEBUG variables
+u32 disparos = 0, caidas = 0;
+
+bool paused = false, game_over = false;
 
 u64 timers[TIMER__LENGTH] = {0};
 u64 tpms;     // Ticks por milisegundo
@@ -76,13 +86,25 @@ char getc(u8 x, u8 y){
   return vga[y * COLS + x];
 }
 
-
 /* Pinta la pantalla de un color*/
 void clear(enum color bg){
     u8 x, y;
     for (y = 0; y < ROWS; y++)
         for (x = 0; x < COLS; x++)
             putc(x, y, bg, bg, ' ');
+}
+
+char* itoa(u32 n, u8 r, u8 w){
+  static const char d[16] = "0123456789ABCDEF";
+  static char s[34];
+  s[33] = 0;
+  u8 i = 33;
+  do {
+      i--;
+      s[i] = d[n % r];
+      n /= r;
+  } while (i > 33 - w);
+  return (char *) (s + i);
 }
 
 /*==============================================================================
@@ -121,6 +143,7 @@ u8 rtcs(void){
     outb(0x70, 0x00);
     sec = inb(0x71);
   } while (sec != last && (last = sec));
+  return sec;
 }
 
 /* Setea la variable tpms al número de ticks del CPU por milisegundo, basado en
@@ -166,6 +189,11 @@ bool wait(enum timer timer, u32 ms){
   }
 }
 
+/*Un generador de randoms, basado en el número de ticks desde el inicio*/
+u32 rand(u32 range){
+  return (u32) rdtsc() % range;
+}
+
 /*==============================================================================
                               ESCANEO DE TECLAS
 ==============================================================================*/
@@ -176,6 +204,56 @@ u8 scan(void){
     return key = scan;
   else
     return 0;
+}
+
+/*==============================================================================
+                              FUNCIONES DE JUEGO
+==============================================================================*/
+void move_char(int row,int column,int row_direction,int column_direction) {
+  char c;
+  u16 actual_char, replacemente_char;
+  actual_char = vga[row*COLS + column];
+  replacemente_char = vga[(row+row_direction)*COLS + (column+column_direction)];
+  enum color fg,bg;
+
+  bg = (actual_char & 0xF000) >> 12;
+  fg = (actual_char & 0x0F00) >> 8;
+  c = getc(column,row);
+
+  putc(column,row,fg,bg,c);
+
+  bg = (replacemente_char & 0xF000) >> 12;
+  fg = (replacemente_char & 0x0F00) >> 8;
+  c = getc(column+column_direction,row+row_direction);
+
+  putc(column+column_direction,row+row_direction,fg,bg,c);
+
+}
+
+int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
+  return (row >= 0 && row < 24 && column >= 0 && column < 80);
+}
+
+int verify_colition(int row, int column, int row_direction, int column_direction) {
+  if(!valid_vga_position(row_direction,column_direction)) {
+    return 1;
+  }
+  char c = getc(row_direction,column_direction);
+  if (c != ' ') {
+    return 1;
+  }
+  return 0;
+}
+
+void create_walls(int row, int column,int len,enum color fg,enum color bg,char c) {
+  int i,rows_max;
+  rows_max = 23;
+  for (i=row;i<rows_max;i++) {
+    putc(column,i,fg,bg,c);
+    putc(column+len,i,fg,bg,c);
+    move_char(i,column,1,0);
+    move_char(i,column+len,1,0);
+  }
 }
 
 /*==============================================================================
@@ -209,9 +287,10 @@ void draw_intro(char option) {
     option == 'G' ? puts(38,10,BLACK,CYAN,"Start") : puts(38,10,BLUE,BLACK,"Start");
     option == 'L' ? puts(35,11,BLACK,CYAN,"Leaderboard") : puts(35,11,BLUE,BLACK,"Leaderboard");
     puts(39,15,BLUE,BLACK,"2020");
-    puts(38,16,BLUE,BLACK,"Alejandro");
-    puts(38,17,BLUE,BLACK,"Alberto");
-    puts(39,18,BLUE,BLACK,"Aymaru");
+    puts(33,16,BLUE,BLACK,"Aymaru Castillo");
+    puts(33,17,BLUE,BLACK,"Alejandro Garita");
+    puts(34,18,BLUE,BLACK,"Alberto Obando");
+    puts(34,21,BLUE,BLACK,"Ernesto Rivera");
 }
 
 /* Draws intro Screnn */
@@ -220,7 +299,8 @@ void draw_world(char option) {
     option == '1' ? puts(40,10,BLACK,YELLOW,"Level 1") : puts(40,10,BRIGHT|YELLOW,BLACK,"Level 1");
     option == '2' ? puts(40,11,BLACK,YELLOW,"Level 2") : puts(40,11,BRIGHT|YELLOW,BLACK,"Level 2");
     option == '3' ? puts(40,12,BLACK,YELLOW,"Level 3") : puts(40,12,BRIGHT|YELLOW,BLACK,"Level 3");
-    option == 'V' ? puts(41,13,BLACK,YELLOW,"Back") : puts(41,13,BRIGHT|YELLOW,BLACK,"Back");
+    option == '4' ? puts(40,13,BLACK,YELLOW,"Level 4") : puts(40,13,BRIGHT|YELLOW,BLACK,"Level 4");
+    option == 'V' ? puts(75,20,BLACK,YELLOW,"Back") : puts(75,20,BRIGHT|YELLOW,BLACK,"Back");
 }
 
 /* Draws intro Screnn */
@@ -248,62 +328,30 @@ void draw_game_over(char option) {
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
 }
 
-void move_char(int row,int column,int row_direction,int column_direction) {
-  char c;
-  u16 actual_char, replacemente_char;
-  actual_char = vga[row*COLS + column];
-  replacemente_char = vga[(row+row_direction)*COLS + (column+column_direction)];
-  enum color fg,bg;
+void draw(void){
 
-  bg = (actual_char & 0xF000) >> 12;
-  fg = (actual_char & 0x0F00) >> 8;
-  c = getc(column,row);
-
-  putc(column,row,fg,bg,c);
-
-  bg = (replacemente_char & 0xF000) >> 12;
-  fg = (replacemente_char & 0x0F00) >> 8;
-  c = getc(column+column_direction,row+row_direction);
-
-  putc(column+column_direction,row+row_direction,fg,bg,c);
-
-}
-
-int verify_colition(int row, int column, int row_direction, int column_direction) {
-  if(!valid_vga_position(row_direction,column_direction)) {
-    return 1;
+  if (paused) {
+    goto status;
   }
-  char c = getc(row_direction,column_direction);
-  if (c != ' ') {
-    return 1;
-  }
-  return 0;
-}
 
-int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
-  return (row >= 0 && row < 24 && column >= 0 && column < 80);
-}
+  // DIBUJAR PAREDES
 
-void create_walls(int row, int column,int len,enum color fg,enum color bg,char c) {
-  int i,rows_max;
-  rows_max = 23;
-  for (i=row;i<rows_max;i++) {
-    putc(column,i,fg,bg,c);
-    putc(column+len,i,fg,bg,c);
-    move_char(i,column,1,0);
-    move_char(i,column+len,1,0);
-  }
+  // DIBUJAR ENEMIGOS
+
+  // DIBUJAR JUGADOR
+
+status:
+  if(paused)
+    puts(70, 0, BRIGHT | YELLOW, BLACK, "PAUSED");
+  puts(38,23, BRIGHT | YELLOW, BLACK, "0000");
+  puts(38,23, BRIGHT | YELLOW, BLACK, itoa(score, 10, 4));
 }
 
 void kmain(){
   clear(BLACK);
-  create_walls(0,25,30,RED,BLACK,'|');
-  create_walls(0,27,30,YELLOW,BLACK,'|');
-  create_walls(0,29,30,CYAN,BLACK,'|');
-  //draw_about();
 
+  draw_about();
 
-/*
   // Espera un segundo para calibrar el tiempo.
   u32 itpms;
   tps();
@@ -311,9 +359,6 @@ void kmain(){
   itpms = tpms; while(tpms == itpms) tps();
 
   u8 key;
-  u8 last_key;
-
-  char option = 'G';
   bool updated = false;
 
   clear(BLACK);
@@ -322,7 +367,6 @@ start:
   draw_intro(option);
 
   if((key = scan())) {
-    last_key = key;
     switch(key) {
       case KEY_UP:
         option = (option == 'L') ? 'G' : 'L';
@@ -349,33 +393,26 @@ game:
   tps();
   draw_world(option);
 
-  //putc(0,0,BLACK, YELLOW, getc(35,10));
   if((key = scan())) {
-    last_key = key;
     switch(key) {
       case KEY_UP:
         if(option == '1')      option = 'V';
         else if(option == '2') option = '1';
         else if(option == '3') option = '2';
-        else option = '3';
+        else if(option == '4') option = '3';
+        else option = '4';
         break;
       case KEY_DOWN:
         if(option == '1')      option = '2';
         else if(option == '2') option = '3';
-        else if(option == '3') option = 'V';
+        else if(option == '3') option = '4';
+        else if(option == '4') option = 'V';
         else option = '1';
         break;
       case KEY_ENTER:
         clear(BLACK);
-        if (option == '1'){
-          goto loop;
-        }
-        else if(option == '2'){
-          goto loop;
-        }
-        else if(option == '3'){
-          goto loop;
-        }
+        if (option == '1' || option == '2' ||
+            option == '3' || option == '4') goto loop;
         else goto start;
         break;
     }
@@ -388,7 +425,6 @@ leaderboard:
   draw_leaderboard(option);
 
   if((key = scan())) {
-    last_key = key;
     switch(key) {
       case KEY_ENTER:
         clear(BLACK);
@@ -403,78 +439,73 @@ loop:
   // INICIO
   tps();    //Mantiene los timers calibrados.
 
-  u32 ultimaPiezaX, ultimaPiezaY;
-  if(TIMER_ANIMACIONES != 0 && wait(TIMER_ANIMACIONES, 500)){
-    if(ultimaPiezaX == 70 && ultimaPiezaY == 0) putc(70,0,YELLOW, BLACK, ' ');
-    else if(ultimaPiezaX == 70 && ultimaPiezaY == 1) putc(70,1,YELLOW, BLACK, ' ');
-    else if(ultimaPiezaX == 67 && ultimaPiezaY == 0) putc(67,0,YELLOW, BLACK, ' ');
-    else if(ultimaPiezaX == 64 && ultimaPiezaY == 1) putc(64,1,YELLOW, BLACK, ' ');
-    else if(ultimaPiezaX == 69 && ultimaPiezaY == 0) putc(69,0,YELLOW, BLACK, ' ');
-    else{
-      puts(72,0,YELLOW, BLACK, '  ');
-      puts(72,1,YELLOW, BLACK, '  ');
-    }
-  }
+  // ACTUALIZAR SCORE
 
+  // SEÑAL DE NIVEL
   if(option == '1'){
-    putc(1,0,GREEN, YELLOW, '1');
+    speed_b = BULLET_SPEED;
+    speed_e = ENEMY_1_SPEED;
+    puts(1,0,RED, BRIGHT | RED, "-1-");
   }
   else if(option == '2'){
-    putc(1,0,GREEN, YELLOW, '2');
+    speed_b = 0;
+    speed_e = ENEMY_2_SPEED;
+    puts(1,0,YELLOW, BRIGHT | YELLOW, "-2-");
   }
   else if(option == '3'){
-    putc(1,0,GREEN, YELLOW, '3');
-  }
+    speed_b = BULLET_SPEED;
+    speed_e = ENEMY_3_SPEED;
+    puts(1,0,BLUE, BRIGHT | BLUE, "-3-");}
+  else if(option == '4'){
+    speed_b = 0;
+    speed_e = ENEMY_4_SPEED;
+    puts(1,0,MAGENTA, BRIGHT | MAGENTA, "-4-");}
+
   // SI PRESIONO TECLA
   if((key = scan())) {
-    last_key = key;
     switch(key) {
       case KEY_UP:        // Arriba
-        putc(70,0,YELLOW, BLACK, '|');
-        ultimaPiezaX = 70;
-        ultimaPiezaY = 0;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(70,0,YELLOW, BLACK, ' ');
         break;
       case KEY_DOWN:      // Abajo
-        putc(70,1,YELLOW, BLACK, '|');
-        ultimaPiezaX = 70;
-        ultimaPiezaY = 1;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(70,1,YELLOW, BLACK, ' ');
         break;
       case KEY_SPACE:     // Disparar
-        putc(67,0,YELLOW, BLACK, '-');
-        ultimaPiezaX = 67;
-        ultimaPiezaY = 0;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(67,0,YELLOW, BLACK, ' ');
         break;
       case KEY_ENTER:     // Siguiente
-        putc(64,1,YELLOW, BLACK, 'o');
-        ultimaPiezaX = 64;
-        ultimaPiezaY = 1;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(64,1,YELLOW, BLACK, ' ');
         break;
       case KEY_LEFT:     // Izquierda
-        putc(69,0,YELLOW, BLACK, '_');
-        ultimaPiezaX = 69;
-        ultimaPiezaY = 0;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(69,0,YELLOW, BLACK, ' ');
         break;
       case KEY_RIGHT:     // Derecha
-        putc(71,0,YELLOW, BLACK, '_');
-        ultimaPiezaX = 71;
-        ultimaPiezaY = 0;
-        if(wait(TIMER_ANIMACIONES, 100)) putc(71,0,YELLOW, BLACK, ' ');
         break;
       case KEY_P:         // Pausa
-        puts(72,0,RED, BLACK, "|| PAUSE");
-        puts(72,1,RED, BLACK, "||");
-        ultimaPiezaX = 72;
-        ultimaPiezaY = 0;
+        break;
+      case KEY_S:         // Siguiente nivel
+        caidas = disparos = 0;
+        puts(1,21, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
+        puts(1,20, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+        if(option == '1') option = '2';
+        else if(option == '2') option = '3';
+        else if(option == '3') option = '4';
+        else{clear(BLACK); option = 'G'; goto start;}
         break;
     }
     updated = true;
   }
-  // SI EL JUEGO ESTÁ PAUSADO, NO HA PERDIDO Y SE CUMPLE EL INTERVALO
 
-  goto loop;*/
+  // ACTUALIZAR ENEMIGO
+  if(!paused && !game_over && interval(TIMER_ENEMY, speed_e)){
+    caidas++;
+    puts(1,20, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+  }
+
+  // ACTUALIZAR BALAS
+  if((option == '1' || option == '3') && interval(TIMER_BULLET, speed_b)){
+    disparos++;
+    puts(1,21, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
+  }
+
+  // draw update parametro opcion
+  if (updated){
+    draw();
+  }
+  goto loop;
 }

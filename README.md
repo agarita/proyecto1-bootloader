@@ -78,6 +78,7 @@ Para construir el bootloader use:
   linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.bin -fno-exceptions -nostdlib -fno-rtti -shared`
 
 ## Referencias
+Referencia colores VGA: https://www.fountainware.com/EXPL/vga_color_palettes.htm
 Referencia de caracteres posibles/Code page 737: https://en.wikipedia.org/wiki/Code_page_737
 LEAD: https://atariage.com/store/index.php?l=product_detail&p=932
 Instrucción A20: https://wiki.osdev.org/A20_Line
