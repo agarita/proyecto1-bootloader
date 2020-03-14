@@ -30,7 +30,7 @@ enum color {
 enum timer {
   TIMER_ENEMY,
   TIMER_BULLET,
-  TIMER_ANIMACIONES,
+  TIMER_WALL,
   TIMER__LENGTH
 };
 
@@ -55,11 +55,14 @@ enum timer {
 
 u16* const vga = (u16*) 0xb8000;
 
-u32 score = 0, speed_e = ENEMY_1_SPEED, speed_b = 0;
+u32 score = 0, speed_e = 0, speed_b = 0, speed_w = 0;
+u32 swapColor = 0, wallStart = 0, wallInterval = 0;
+
+char wallOption;
 char option;
 
 //DEBUG variables
-u32 disparos = 0, caidas = 0;
+u32 playerX, playerY, disparos, enemigo, pared;
 
 bool debug;
 bool paused = false, game_over = false;
@@ -221,39 +224,47 @@ void move_char(int row,int column,int row_direction,int column_direction) {
   fg = (actual_char & 0x0F00) >> 8;
   c = getc(column,row);
 
-  putc(column,row,fg,bg,c);
+  putc(column+column_direction,row+row_direction,fg,bg,c);
 
   bg = (replacemente_char & 0xF000) >> 12;
   fg = (replacemente_char & 0x0F00) >> 8;
   c = getc(column+column_direction,row+row_direction);
 
-  putc(column+column_direction,row+row_direction,fg,bg,c);
+  putc(column,row,fg,bg,' ');
 
 }
 
-int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
-  return (row >= 0 && row < 24 && column >= 0 && column < 80);
+void create_wall(int column, int len,enum color fg,enum color bg,char c) {
+  putc(column,2,fg,bg,c);
+  putc(column+len,2,fg,bg,c);
 }
 
-int verify_colition(int row, int column, int row_direction, int column_direction) {
-  if(!valid_vga_position(row_direction,column_direction)) {
-    return 1;
+void move_walls(){
+  for(int i = 22; i >= 0; i--){
+    for(int j = 0; j < 80; j++){
+      if(getc(j,i) == '|'){
+        if(i == 22){
+          putc(j,i, BLACK,BLACK,' ');
+        }
+        if(getc(j,i+1) == '@'){
+          game_over = true;
+        }
+        else move_char(i,j,1,0);
+      }
+    }
   }
-  char c = getc(row_direction,column_direction);
-  if (c != ' ') {
-    return 1;
-  }
-  return 0;
 }
 
-void create_walls(int row, int column,int len,enum color fg,enum color bg,char c) {
-  int i,rows_max;
-  rows_max = 23;
-  for (i=row;i<rows_max;i++) {
-    putc(column,i,fg,bg,c);
-    putc(column+len,i,fg,bg,c);
-    move_char(i,column,1,0);
-    move_char(i,column+len,1,0);
+void move_player(u32 direction){
+  if(getc(playerX+direction, playerY) == '|'){
+    return;
+  }
+  move_char(playerX, playerY, 0, direction);
+  if(direction == 1){
+    putc(playerX++, playerY,BLACK,BLACK,' ');
+  }
+  else{
+    putc(playerX--, playerY,BLACK,BLACK,' ');
   }
 }
 
@@ -329,6 +340,160 @@ void draw_game_over(char option) {
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
 }
 
+void draw_wall(){
+  if(option == '1'){
+    if(pared%3 == 0){
+      if(swapColor > 3){
+        if(swapColor == 8) swapColor = 0;
+        create_wall(wallStart, 40, BRIGHT|RED, BRIGHT|RED, '|');
+        swapColor++;
+      }
+      else{
+        create_wall(wallStart, 40, RED, RED, '|');
+        swapColor++;
+      }
+    }
+    else create_wall(wallStart,40, BLACK, BLACK, '|');
+  }
+  else if(option == '2'){
+    if(pared < 22){
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|YELLOW, BRIGHT|YELLOW, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, YELLOW, YELLOW, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+    else if(wallOption == 'I'){
+      wallStart--;
+      if(wallStart <= 5){
+        wallOption = 'D';
+      }
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|YELLOW, BRIGHT|YELLOW, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, YELLOW, YELLOW, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+    else{
+      wallStart++;
+      if(wallStart >= 40){
+        wallOption = 'I';
+      }
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|YELLOW, BRIGHT|YELLOW, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, YELLOW, YELLOW, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+  }
+  else if(option == '3'){
+    if(pared < 22){
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|BLUE, BRIGHT|BLUE, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, BLUE, BLUE, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+    else if(wallOption == 'I'){
+      wallStart--;
+      if(wallStart <= 5){
+        wallOption = 'J';
+      }
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|BLUE, BRIGHT|BLUE, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, BLUE, BLUE, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+    else if(wallOption == 'D'){
+      wallStart++;
+      if(wallStart >= 40){
+        wallOption = 'E';
+      }
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT|BLUE, BRIGHT|BLUE, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, BLUE, BLUE, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+    else{
+      if(wallInterval-- == 0){
+        wallInterval = 22;
+        if(wallOption == 'J') wallOption = 'D';
+        else wallOption = 'I';
+      }
+      if(pared%3 == 0){
+        if(swapColor > 3){
+          if(swapColor == 8) swapColor = 0;
+          create_wall(wallStart, 35, BRIGHT | BLUE, BRIGHT | BLUE, '|');
+          swapColor++;
+        }
+        else{
+          create_wall(wallStart, 35, BLUE, BLUE, '|');
+          swapColor++;
+        }
+      }
+      else create_wall(wallStart,35, BLACK, BLACK, '|');
+    }
+  }
+  else{
+    if(pared%3 == 0){
+      if(swapColor > 3){
+        if(swapColor == 8) swapColor = 0;
+        create_wall(wallStart, 20, BRIGHT|MAGENTA, BRIGHT|MAGENTA, '|');
+        swapColor++;
+      }
+      else{
+        create_wall(wallStart, 20, MAGENTA, MAGENTA, '|');
+        swapColor++;
+      }
+    }
+    else create_wall(wallStart,20, BLACK, BLACK, '|');
+  }
+}
+
 void draw(void){
 
   if (paused) {
@@ -340,6 +505,7 @@ void draw(void){
   // DIBUJAR ENEMIGOS
 
   // DIBUJAR JUGADOR
+  putc(playerX, playerY, BLUE, BRIGHT | BLUE, '@');
 
 status:
   if(paused)
@@ -492,7 +658,10 @@ void kmain(){
   itpms = tpms; while(tpms == itpms) tps();
 
   u8 key;
-  debug = true; option = 'G';
+  swapColor = 0;
+  disparos = 0, enemigo = 0;
+  playerX = 39, playerY = 22;
+  debug = false; option = 'G';
   bool updated = false;
 
   clear(BLACK);
@@ -545,8 +714,25 @@ game:
         break;
       case KEY_ENTER:
         clear(BLACK);
-        if (option == '1' || option == '2' ||
-            option == '3' || option == '4') goto loop;
+        if(option == '1'){
+          wallStart = 20;
+          goto loop;
+        }
+        else if(option == '2'){
+          wallOption = 'I';
+          wallStart = 25;
+          goto loop;
+        }
+        else if(option == '3'){
+          wallOption = 'I';
+          wallStart = 25;
+          wallInterval = 22;
+          goto loop;
+        }
+        else if(option == '4'){
+          wallStart = 30;
+          goto loop;
+        }
         else{option = 'G'; goto start;}
         break;
     }
@@ -570,15 +756,33 @@ leaderboard:
 
   goto leaderboard;
 
+gameover:
+  draw_game_over(option);
+
+  if((key = scan())) {
+    switch(key) {
+      case KEY_ENTER:
+        clear(BLACK);
+        game_over = false;
+        option = 'G';
+        goto start;
+        break;
+    }
+  }
+
+  goto gameover;
+
 loop:
   // INICIO
   tps();    //Mantiene los timers calibrados.
 
   if(debug) {
-    puts(1,23, BLUE, BRIGHT | BLUE, "Gravedad: ");
-    puts(11,23, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
+    puts(1,23, BLUE, BRIGHT | BLUE, "Enemigos: ");
+    puts(11,23, BLUE, BRIGHT | BLUE, itoa(enemigo, 10, 4));
     puts(1,24, GREEN, BRIGHT | GREEN, "Disparos: ");
     puts(11,24, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
+    puts(16,23, RED, BRIGHT | RED, "Paredes: ");
+    puts(25,23, RED, BRIGHT | RED, itoa(pared, 10, 4));
   }
 
   // ACTUALIZAR SCORE
@@ -587,62 +791,89 @@ loop:
   if(option == '1'){
     speed_b = BULLET_SPEED;
     speed_e = ENEMY_1_SPEED;
+    speed_w = WALL_1_SPEED;
     puts(1,0,RED, BRIGHT | RED, "-1-");
   }
   if(option == '2'){
     speed_b = 0;
     speed_e = ENEMY_2_SPEED;
+    speed_w = WALL_2_SPEED;
     puts(1,0,YELLOW, BRIGHT | YELLOW, "-2-");
   }
   if(option == '3'){
     speed_b = BULLET_SPEED;
     speed_e = ENEMY_3_SPEED;
+    speed_w = WALL_3_SPEED;
     puts(1,0,BLUE, BRIGHT | BLUE, "-3-");}
   if(option == '4'){
     speed_b = 0;
     speed_e = ENEMY_4_SPEED;
-    puts(1,0,MAGENTA, BRIGHT | MAGENTA, "-4-");}
+    speed_w = WALL_4_SPEED;
+    puts(1,0,MAGENTA, BRIGHT | MAGENTA, "-4-");
+  }
 
   // SI PRESIONO TECLA
   if((key = scan())) {
     switch(key) {
-      case KEY_UP:        // Arriba
-        break;
-      case KEY_DOWN:      // Abajo
-        break;
-      case KEY_SPACE:     // Disparar
-        break;
-      case KEY_ENTER:     // Siguiente
-        break;
-      case KEY_LEFT:     // Izquierda
+      case KEY_LEFT:      // Izquierda
+        move_player(-1);
         break;
       case KEY_RIGHT:     // Derecha
+        move_player(1);
         break;
       case KEY_D:
         debug = !debug;
-        puts(1,23, BLACK, BLACK, "              ");
+        puts(1,23, BLACK, BLACK, "                               ");
         puts(1,24, BLACK, BLACK, "              ");
-        break;
+        break;        // Activar debug
       case KEY_P:         // Pausa
         paused = !paused;
         puts(70, 0, BLACK, BLACK, "      ");
         break;
       case KEY_S:         // Siguiente nivel
-        caidas = disparos = 0;
-        puts(11,23, BLUE, BRIGHT | BLUE, itoa(caidas, 10, 4));
-        puts(11,24, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
-        if(option == '1') option = '2';
-        else if(option == '2') option = '3';
-        else if(option == '3') option = '4';
+        clear(BLACK);
+        enemigo = disparos = pared = 0;
+        playerX = 39, playerY = 22;
+        if(option == '1'){
+          option = '2';
+          wallOption = 'I';
+          wallStart = 25;
+          goto loop;
+        }
+        else if(option == '2'){
+          option = '3';
+          wallOption = 'I';
+          wallStart = 25;
+          goto loop;
+        }
+        else if(option == '3'){
+          option = '4';
+          wallStart = 30;
+          wallInterval = 22;
+          goto loop;
+        }
         else{clear(BLACK); option = 'G'; goto start;}
         break;
     }
     updated = true;
   }
 
+  if(game_over){
+    clear(BLACK);
+    option = 'V';
+    goto gameover;
+  }
+
+  // ACTUALIZAR PAREDES
+  if(!paused && !game_over && interval(TIMER_WALL, speed_w)){
+    pared++;
+    draw_wall();
+    move_walls();
+  }
+
   // ACTUALIZAR ENEMIGO
   if(!paused && !game_over && interval(TIMER_ENEMY, speed_e)){
-    caidas++;
+    enemigo++;
   }
 
   // ACTUALIZAR BALAS
