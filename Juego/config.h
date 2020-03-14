@@ -1,6 +1,6 @@
 /* Player specific values */
 #define LIFES (3)             // 3 lives before game over
-#define BULLET_SPEED (500)    // Velocidad bala del jugador
+#define BULLET_SPEED (40)    // Velocidad bala del jugador
 
 /* Enemy specific values */
 #define ENEMY_1_SPEED (1000)  // Interval in ms to apply gravity for level 1 enemy

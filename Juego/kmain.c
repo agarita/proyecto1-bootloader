@@ -235,8 +235,14 @@ void move_char(int row,int column,int row_direction,int column_direction) {
 }
 
 void create_wall(int column, int len,enum color fg,enum color bg,char c) {
+  for(int i = 0; i < column; i++){
+    putc(i,2,BLACK,BLACK,'|');
+  }
   putc(column,2,fg,bg,c);
   putc(column+len,2,fg,bg,c);
+  for(int i = column+len+1; i<80; i++){
+    putc(i,2,BLACK,BLACK,'|');
+  }
 }
 
 void move_walls(){
@@ -265,6 +271,26 @@ void move_player(u32 direction){
   }
   else{
     putc(playerX--, playerY,BLACK,BLACK,' ');
+  }
+}
+
+void create_bullet(char c) {
+  putc(playerX, playerY-1, CYAN, BLACK, c);
+}
+
+void move_bullets(void){
+  for (int i = 0; i < 22; i++){
+    for (int j = 0; j < 80; j++){
+      if(getc(j,i) == 'o'){
+        if(i == 2){
+          putc(j,i, BLACK,BLACK,' ');
+        }
+        if(getc(j,i-1) == '|'){
+          ;
+        }
+        else move_char(i,j,-1,0);
+      }
+    }
   }
 }
 
@@ -338,6 +364,10 @@ void draw_game_over(char option) {
     puts(38,10,RED,BLACK,"You Lost");
     puts(38,11,RED,BLACK,":( :( :( ");
     option == 'V' ? puts(41,20,BLACK,YELLOW,"Continue") : puts(41,20,BRIGHT|YELLOW,BLACK,"Continue");
+}
+
+void draw_bullet(){
+  create_bullet('o');
 }
 
 void draw_wall(){
@@ -423,8 +453,7 @@ void draw_wall(){
       else create_wall(wallStart,35, BLACK, BLACK, '|');
     }
     else if(wallOption == 'I'){
-      wallStart--;
-      if(wallStart <= 5){
+      if(--wallStart <= 5){
         wallOption = 'J';
       }
       if(pared%3 == 0){
@@ -441,8 +470,7 @@ void draw_wall(){
       else create_wall(wallStart,35, BLACK, BLACK, '|');
     }
     else if(wallOption == 'D'){
-      wallStart++;
-      if(wallStart >= 40){
+      if(++wallStart >= 40){
         wallOption = 'E';
       }
       if(pared%3 == 0){
@@ -514,6 +542,10 @@ status:
   puts(38,23, BRIGHT | YELLOW, BLACK, itoa(score, 10, 4));
 }
 
+int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
+  return (row >= 0 && row < 24 && column >= 0 && column < 80);
+}
+
 int verify_colition(int row, int column, int row_direction, int column_direction) {
   if(!valid_vga_position(row+row_direction,column+column_direction)) {
     return 1;
@@ -525,10 +557,6 @@ int verify_colition(int row, int column, int row_direction, int column_direction
   return 0;
 }
 
-int valid_vga_position(int row, int column) { //80 columnas y 25 filas (voy a usar 24 para dejar la fila de abajo para el score)
-  return (row >= 0 && row < 24 && column >= 0 && column < 80);
-}
-
 void create_walls(int row, int column,int len,enum color fg,enum color bg,char c) {
   int i,rows_max;
   rows_max = 23;
@@ -538,108 +566,6 @@ void create_walls(int row, int column,int len,enum color fg,enum color bg,char c
     move_char(i,column,1,0);
     move_char(i,column+len,1,0);
   }
-}
-
-//Hace caer todos los enemigos una fila
-
-void make_them_fall() {
-  int row,column,buscar;
-  char c;
-  buscar = 0;
-  for (row = 23;row>=0;row--) {
-    for (column = 0;column<COLS;column++) {
-      if (buscar) {
-        c = getc(column,row);
-        if (c == '|') {
-          buscar = 0;
-          break;
-        } else if(c == 'X') { //'X' Para representar enemigos
-          if(verify_colition(row,column,1,0)){
-            continue;
-            //validar si es el jugador, terminar partida
-          }
-          u16 replacemente_char;
-          replacemente_char = vga[(row+1)*COLS + column];
-          c = getc(column,row+1);
-          move_char(row,column,1,0);
-          if (c == ' ' && row == 23) {
-            vga[(row+1)*COLS + column] = replacemente_char;
-          }
-
-        }
-      } else {
-        c = getc(column,row);
-        if (c == '|') {
-          buscar = 1;
-        }
-      }
-    }
-  }
-}
-
-void move_shoots() {
-  int row,column,buscar;
-  char c;
-  for (row = 0;row<24;row++) {
-    for (column = 0;column<COLS;column++) {
-      c = getc(column,row);
-      if (buscar) {
-        if (c == '|') {
-          buscar = 0;
-          break;
-        } else if(c == '\'') { //'\'' Para representar enemigos
-          if(verify_colition(row,column,-1,0)){
-            putc(column,row,BLACK,BLACK,' ');
-            c = getc(row-1,column);
-            if (c == 'X') {
-              putc(column,row-1,BLACK,BLACK,' ');
-              //sumar score
-            } 
-            continue;
-          } else move_char(row,column,-1,0);
-        }
-      } else {
-        if (c == '|') {
-          buscar = 1;
-        }
-      }
-    }
-  }
-}
-
-//direcciones -1 izquierda, +1 derecha, 0 no se mueve
-void move_wall(int row, int column, int len, int direction) {
-  move_char(row,column,0,direction);
-  move_char(row,column+len,0,direction);
-}
-
-int get_len_between_walls(int row,int col) {
-  char c;
-  int column,len;
-  
-  len = 0;
- 
-  for (column = col+1;column<COLS;column++) {
-    c = getc(column,row);
-  
-    if (c == '|') {
-      return len;
-    }
-    len++;    
-  }
-  return 0;
-}
-
-int get_column_of_wall(int row) {
-  char c;
-  int col;
-  for (col = 0;col < COLS;col++) {
-    c = getc(col,row);
-    if (c == '|') {
-      return col;
-    }
-  }
-  return 0;
 }
 
 void kmain(){
@@ -864,6 +790,14 @@ loop:
     goto gameover;
   }
 
+  // ACTUALIZAR BALAS
+  if((option == '1' || option == '3') && !paused &&
+  !game_over && interval(TIMER_BULLET, speed_b)){
+    disparos++;
+    draw_bullet();
+    move_bullets();
+  }
+
   // ACTUALIZAR PAREDES
   if(!paused && !game_over && interval(TIMER_WALL, speed_w)){
     pared++;
@@ -874,12 +808,6 @@ loop:
   // ACTUALIZAR ENEMIGO
   if(!paused && !game_over && interval(TIMER_ENEMY, speed_e)){
     enemigo++;
-  }
-
-  // ACTUALIZAR BALAS
-  if((option == '1' || option == '3') && !paused &&
-      !game_over && interval(TIMER_BULLET, speed_b)){
-    disparos++;
   }
 
   // ACTUALIZAR EL JUEGO
