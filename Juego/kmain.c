@@ -477,6 +477,8 @@ loop:
       case KEY_RIGHT:     // Derecha
         break;
       case KEY_P:         // Pausa
+        paused = !paused;
+        puts(70, 0, BLACK, BLACK, "      ");
         break;
       case KEY_S:         // Siguiente nivel
         caidas = disparos = 0;
@@ -498,12 +500,13 @@ loop:
   }
 
   // ACTUALIZAR BALAS
-  if((option == '1' || option == '3') && interval(TIMER_BULLET, speed_b)){
+  if((option == '1' || option == '3') && !paused &&
+      !game_over && interval(TIMER_BULLET, speed_b)){
     disparos++;
     puts(1,21, GREEN, BRIGHT | GREEN, itoa(disparos, 10, 4));
   }
 
-  // draw update parametro opcion
+  // ACTUALIZAR EL JUEGO
   if (updated){
     draw();
   }
