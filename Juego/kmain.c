@@ -391,7 +391,7 @@ void draw_world(char option) {
 void draw_leaderboard(char option) {
     puts(38,4,BLUE,BLACK, "NOT IMPLEMENTED");
     puts(38,5,BLUE,BLACK, "Leaderboard");
-    puts(38,7,BLUE,BLACK, "Name     Score")
+    puts(38,7,BLUE,BLACK, "Name     Score");
     puts(38,8,BLUE,BLACK, "AOZ   10000000");
     puts(38,9,BLUE,BLACK, "AGC    5858588");
     puts(38,10,BLUE,BLACK,"ACF      40000");

@@ -1,14 +1,35 @@
 # Proyecto 1: The Bootloader
+
 Proyecto 1 del curso de Principios de Sistemas Operativos. El objetivo del proyecto es desarrollar un bootloader que ejecute una versión del juego Lead (Atari 2600). Este proyecto está desarrollado con NASM y C.
 
-## Funcionamiento
+## Requerimientos
+
+Aunque este juego está desarrollado para ser ejecutado como bootloader en una computadora sin Sistema Operativo. Resulta más conveniente para observar el juego usando el emulador de procesadores QEMU.
+
+## Comandos
+
+Para construir el bootloader simplemente use:
+`make`
+
+Para limpiar los archivos resultantes puede usar:
+`make clear`
+
+Para compilar cada parte individualmente use:
+**nasm**: `nasm -f elf32 boot.asm -o boot.o`
+**gcc**: `gcc -Wall -fno-PIE -fomit-frame-pointer -ffreestanding -m32 -Os -c kmain.c -o kernel.o`
+**linker**: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.bin -fno-exceptions -nostdlib -fno-rtti -shared`
+
+## Documentacion
+
 El bootloader de este proyecto debe cumplir con ciertas características
 
 ### Ser booteable
-Un archivo booteable debe ser de 512 bytes de memoria exactos, lo cuál se logra rellenando con ceros el espacio libre. Para indicarle al BIOS que los 512 bytes marcados son booteables se debe escribir el número hexadecimal aa55 directamente en el ejecutable por medio de `dw 0xaa55`.
+
+Para que un archivo sea booteable debe ser de 512 bytes de memoria exactos, lo cuál se logra rellenando con ceros el espacio libre. Para indicarle al BIOS que los 512 bytes marcados son booteables se debe escribir el número hexadecimal aa55 directamente en el ejecutable por medio de `dw 0xaa55`.
 
 ### Modo protegido de 32 bits
-Si no se le dice al BIOS, solo se pueden usar los registros y las instrucciones de 16 bits. Para poder usar el modo protegido de 32 bits se deben cumplir dos condiciones:
+
+Si no se le especifica explícitamente al BIOS, solo se pueden usar los registros y las instrucciones de 16 bits. Para poder usar el modo protegido de 32 bits se deben cumplir dos condiciones:
 1. Activar las instrucciones de 32 bits.
 2. Dar acceso a los registros completos de 32 bits.
 
@@ -31,17 +52,20 @@ En el caso de este ejemplo se van a tener 3 GDT, un segmento nulo, un segmento d
   * **L**: 1 bit que indica el descriptor de código de **x86-64**. Está reservado para los segmentos de datos.
 
 La estructura del GDT está organizada de la siguiente manera:
-![Diseño de un GDT](/Ayudas/GDT_Entry_Layout.png)
+![Diseño de un GDT](/Imagenes/GDT_Entry_Layout.png)
 
 ### Acceder a más memoria
+
 El BIOS solo carga los primeros 512 bytes del sector de boot. Si se desea escribir programas de más tamaño se debe cargar más espacio en memoria. Para hacer esto se debe usar la instrucción `mov ah, 0x2` que se encargan de leer los sectores de un disco; en conjunto con la interrupción del BIOS `int 0x13` que provee los servicios de disco.
 
 Hecho esto, ya se puede cargar más memoria del segundo sector de memoria, desde está parte se puede realizar un programa fuera de los 512 bytes booteables.
 
-## Diseño de juego
+## Funcionalidad
+
 Como se ha mencionado antes se realizará una versión del juego Lead para la Atari 2600, para lo cuál se tendrán ciertas consideraciones para el diseño del mismo.
 
 ### Tamaño de la pantalla
+
 La pantalla que será usada para representar el juego, se usará el estándar de gráficos VGA en modo de texto 3, está tiene las siguientes especificaciones:
 * Resolución: 720X400 píxeles.
 * Caracteres: 80X25 caracteres.
@@ -55,39 +79,37 @@ Ahora es importante conocer la resolución del juego original para poder realiza
 **Notése** que estos valores están en la forma **ancho** X **alto**, y en la parte lógica del programa será tratado como **columnas** X **filas**
 
 ### Colores y caracteres
-Para crear una experiencia, en este caso se cambia el color del texto en el modo de texto de VGA. Para esto es importante conocer la estructura del [buffer de texto de VGA](https://en.wikipedia.org/wiki/VGA-compatible_text_mode). Estos tienen la siguiente estructura:
+
+Para crear una experiencia fiel, se cambiara el color del texto en el modo de texto de VGA. Para esto es importante conocer la estructura del [buffer de texto de VGA](https://en.wikipedia.org/wiki/VGA-compatible_text_mode).
+![Diseño de un Carácter en VGA](/Imagenes/VGA_Character_Layout.png)
+Estos tienen la siguiente estructura:
 * **Color de fondo**: 4 bits que determinan el color del fondo del carácter. Son 16 colores posibles.
 * **Color de texto**: 4 bits que determinan el color del carácter. Son 16 colores posibles.
 * **Código del carácter**: 8 bits del código ASCII del carácter.
 
+### Diseño de juego
 
-### Como correr el programa en QEMU para boot 1, 2 y 3
-Para compilar el programa en NASM.
-```
-nasm -f bin bootX.asm -o bootX.bin
-```
+El juego cuenta con 4 niveles distintos, con metas y objetivos distintos.
 
-Para ejecutar el programa en arquitectura x86 en QEMU.
-```
-qemu-system-x86_64 -fda bootX.bin
-```
+### Modo debug
 
-Para construir el bootloader use:
-  nasm: `nasm -f elf32 boot.asm -o boot.o`
-  gcc: `gcc -Wall -fno-PIE -fomit-frame-pointer -ffreestanding -m32 -Os -c kmain.c -o kernel.o`
-  linker: `ld -melf_i386 -T linker.ld kmain.o boot.o -o kernel.bin -fno-exceptions -nostdlib -fno-rtti -shared`
+El juego cuenta con un modo de debug para poder ver algunas variables, este se activa simplemente con la tecla D, aunque activarlo puede causar errores gráficos.
+
+## Agradecimiento
+
+A Alex Parker por su increíble tutorial para escribir un bootloader; a Ciro Santilli por sus sencillos ejemplos y uso de técnicas avanzadas para hacer bootloaders con C y NASM; y por último, a Curtis McEnroe desarrollador de Tetrasm, un bootloader en NASM con una versión en C para x86.
 
 ## Referencias
-Referencia colores VGA: https://www.fountainware.com/EXPL/vga_color_palettes.htm
-Referencia de caracteres posibles/Code page 737: https://en.wikipedia.org/wiki/Code_page_737
-LEAD: https://atariage.com/store/index.php?l=product_detail&p=932
-Instrucción A20: https://wiki.osdev.org/A20_Line
-Global Descriptor Table: https://en.wikipedia.org/wiki/Global_Descriptor_Table
-VGA: https://en.wikipedia.org/wiki/VGA-compatible_text_mode
-Atari Hardware: https://en.wikipedia.org/wiki/Atari_2600_hardware
-ReaD Time-Stamp Counter:
+* Referencia colores VGA: https://www.fountainware.com/EXPL/vga_color_palettes.htm
+* Referencia de caracteres posibles/Code page 737: https://en.wikipedia.org/wiki/Code_page_737
+* LEAD: https://atariage.com/store/index.php?l=product_detail&p=932
+* Instrucción A20: https://wiki.osdev.org/A20_Line
+* Global Descriptor Table: https://en.wikipedia.org/wiki/Global_Descriptor_Table
+* VGA: https://en.wikipedia.org/wiki/VGA-compatible_text_mode
+* Atari Hardware: https://en.wikipedia.org/wiki/Atari_2600_hardware
+* ReaD Time-Stamp Counter:
 https://github.com/cirosantilli/x86-bare-metal-examples/blob/master/rtc.S
 https://c9x.me/x86/html/file_module_x86_id_278.html
-I/O: https://wiki.osdev.org/Inline_Assembly/Examples
-Real-Time-Clock: https://en.wikipedia.org/wiki/Real-time_clock
-Key Input: http://stanislavs.org/helppc/scan_codes.html
+* I/O: https://wiki.osdev.org/Inline_Assembly/Examples
+* Real-Time-Clock: https://en.wikipedia.org/wiki/Real-time_clock
+* Key Input: http://stanislavs.org/helppc/scan_codes.html
