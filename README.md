@@ -81,7 +81,9 @@ Ahora es importante conocer la resolución del juego original para poder realiza
 ### Colores y caracteres
 
 Para crear una experiencia fiel, se cambiara el color del texto en el modo de texto de VGA. Para esto es importante conocer la estructura del [buffer de texto de VGA](https://en.wikipedia.org/wiki/VGA-compatible_text_mode).
+
 ![Diseño de un Carácter en VGA](/Imagenes/VGA_Character_Layout.png)
+
 Estos tienen la siguiente estructura:
 * **Color de fondo**: 4 bits que determinan el color del fondo del carácter. Son 16 colores posibles.
 * **Color de texto**: 4 bits que determinan el color del carácter. Son 16 colores posibles.
